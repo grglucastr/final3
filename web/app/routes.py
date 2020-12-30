@@ -2,9 +2,10 @@ from app import app, db, queue_client
 from datetime import datetime
 from app.models import Attendee, Conference, Notification
 from flask import render_template, session, request, redirect, url_for, flash, make_response, session
-from azure.servicebus import Message
+from azure.servicebus import Message, ServiceBusClient
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+from pprint import pprint
 import logging
 
 @app.route('/')
@@ -67,26 +68,27 @@ def notification():
             db.session.add(notification)
             db.session.commit()
 
-            ##################################################
-            ## TODO: Refactor This logic into an Azure Function
-            ## Code below will be replaced by a message queue
-            #################################################
-            attendees = Attendee.query.all()
+            print("notification")
+            print(notification.id)
+            print(notification.message)
+            
 
-            for attendee in attendees:
-                subject = '{}: {}'.format(attendee.first_name, notification.subject)
-                send_email(attendee.email, subject, notification.message)
+            CONNECTION_STR = app.config.get('SERVICE_BUS_CONNECTION_STRING')
+            print("CONNECTION STRING --> : " + CONNECTION_STR)
 
-            notification.completed_date = datetime.utcnow()
-            notification.status = 'Notified {} attendees'.format(len(attendees))
-            db.session.commit()
-            # TODO Call servicebus queue_client to enqueue notification ID
+            
+            QUEUE_NAME = app.config.get('SERVICE_BUS_QUEUE_NAME')
+            print("SERVICE_BUS_QUEUE_NAME --> : " + QUEUE_NAME)
 
-            #################################################
-            ## END of TODO
-            #################################################
+            sb_client = ServiceBusClient.from_connection_string(CONNECTION_STR)
+            queue_client = sb_client.get_queue(QUEUE_NAME)
+            
+            message = Message(str(notification.id))
+            queue_client.send(message)
 
             return redirect('/Notifications')
+
+
         except :
             logging.error('log unable to save notification')
 
@@ -96,7 +98,7 @@ def notification():
 
 
 def send_email(email, subject, body):
-    if not app.config.get('SENDGRID_API_KEY')
+    if not app.config.get('SENDGRID_API_KEY'):
         message = Mail(
             from_email=app.config.get('ADMIN_EMAIL_ADDRESS'),
             to_emails=email,

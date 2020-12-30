@@ -63,9 +63,14 @@ Complete a month cost analysis of each Azure resource to give an estimate total 
 
 | Azure Resource | Service Tier | Monthly Cost |
 | ------------ | ------------ | ------------ |
-| *Azure Postgres Database* |     |              |
-| *Azure Service Bus*   |         |              |
-| ...                   |         |              |
+| *Azure Postgres Database* |Basic|$42.38|
+| *Azure Service Bus*|Basic|$0.05|
+| *App Service* |Basic B1|$12.41|
+| *Azure Functions*|Consumption|$0|
+| *Storage Account*|Standard|$19.44|
+| *Total Month*|-|$74.28|
 
 ## Architecture Explanation
-This is a placeholder section where you can provide an explanation and reasoning for your architecture selection for both the Azure Web App and Azure Function.
+For this project, it was choosed App Services Web App instead of VMs approach. The main reason for that is because of the project be a conference website that will be only available for a certain period of time (less than 6 months). So for that, it is not required to have all the tools that VM deployment approach uses. The tech conference website can pass through updates and changes, so for that, it may be needed a fast deployment and app services already help us with that by pulling our code from our git repository. The tier that I choosed allows me to scale my application out or scale up, this going to be useful during those days near the conference day when the website will get lots of requests from the attendees.
+
+For the Azure Function it was choosed the Consumption plan, because the same reason as App Service, there will be days that the conference site won't get any requests. In those days, I won't pay for the Azure Function, but when the conference day will be near, the site may get lots of requests, so for those requests that I'll pay only.
